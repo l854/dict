@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv='charset' content='utf-8'>
+<title>exercise</title>
+<script src="jquery-3.4.1.js" type='application/javascript'></script>
+<script>
+var wds;
+var idx;
+var cnt;
+$(document).ready(function(){
+   readWords();
+});
+function readWords(){
+   $.get('/read',function(r){
+      wds = JSON.parse(r);
+      wds.sort(()=>Math.random()-.5);
+      idx=-1;
+      cnt=wds.length;
+   });
+}
+function next(){
+   var t;
+   if(idx<cnt-1)
+      t=wds[++idx];
+   console.log(idx);
+   $("#wd").html(t.key);
+   $("#en").html(t.se_lis);
+}
+function previous(){
+   var t;
+   if(idx>0)
+      t=wds[--idx];
+   console.log(idx);
+   $("#wd").html(t.key);
+   $("#en").html(t.se_lis);
+}
+</script>
+</head>
+<body>
+<input type='button' value='next' onclick='next();'/>
+<input type='button' value='previous' onclick='previous();'/>
+<div id='wd'></div>
+<div id='en'></div>
+</body>
+</html>

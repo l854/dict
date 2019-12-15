@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv='charset' content='utf-8'>
+<title>exercise</title>
+<script src="jquery-3.4.1.js" type='application/javascript'></script>
+<script>
+var ans;
+var id;
+var se_lis;
+var pick=function(){
+	$.get('/pick',function(res){
+		var w=JSON.parse(res);
+		ans=w.key;
+		id = w._id;
+		se_lis=w.se_lis;
+		$.get('/ex',{"q":w.key},function(r){
+			var u=JSON.parse(r);
+			var qst = u.en;
+			$("#zh").html(u.zh);
+			$("#en").html(qst.replace(ans,'______'));
+		});
+	});
+	$("#ans").val('');
+}
+$(document).ready(function(){
+	pick();
+});
+function show(){
+	var a = $("#ans").val();
+	if(a==ans){
+		$.get('/next',{"q":id,"v":3});
+		$("#gr").html('<b>Correct</b>');
+	}
+	else{
+		$.get('/next',{"q":id,"v":1});
+		$("#gr").html('<b>'+ans+'</b><br>'+se_lis);
+	}
+	pick();
+}
+</script>
+</head>
+<body>
+<input type='text' id='ans'/>
+<input type='button' onclick='show();'/>
+<div id='en'></div>
+<div id='zh'></div>
+<div id='gr'></div>
+</body>
+</html>

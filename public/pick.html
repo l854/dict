@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv='charset' content='utf-8'>
+<title>exercise</title>
+<script src="jquery-3.4.1.js" type='application/javascript'></script>
+<script>
+$(document).ready(function(){
+   selWords();
+});
+function selWords(){
+   $.get('/list',function(r){
+      var cs = JSON.parse(r);
+      for(let c of cs){
+         $("#wd").append('<input type="checkbox" class="wds" id="'+c.key+'">'
+         +c.key+'</input>');
+      }
+   });
+}
+function submit(){
+   var wc=[];
+   $("input[type='checkbox']:checked").each(function(t){
+      wc.push({"key":$(this).attr('id')});
+   });
+   $.get('/set',{"s":JSON.stringify(wc)});
+}
+</script>
+</head>
+<body>
+<input type='button' onclick='submit();'>submit</input>
+<div id='wd'></div>
+</body>
+</html>
