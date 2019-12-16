@@ -25,8 +25,7 @@ mc.connect(url, {useUnifiedTopology:true},function(err, db){
             c.time=dt.getTime();
             ks.push(c.key);
          }
-         dbn.collection('work')
-         .insertMany(cs);
+         dbn.collection('work').insertMany(cs);
          dbn.collection('key').updateMany(
             {'key':{$in:ks}},
             {$inc:{'visit':-10000}}
@@ -34,6 +33,7 @@ mc.connect(url, {useUnifiedTopology:true},function(err, db){
          res.end('');
       } catch(err) {
          console.log('SET: '+err.message);
+         res.end('');
       }
    });
    app.get('/list', function(req, res){
@@ -48,6 +48,7 @@ mc.connect(url, {useUnifiedTopology:true},function(err, db){
          );
       } catch(err) {
          console.log('LIST: '+err.message);
+         res.end('');
       }
    });
    app.get('/read', function(req, res){
@@ -57,6 +58,7 @@ mc.connect(url, {useUnifiedTopology:true},function(err, db){
          });
       } catch(err) {
          console.log('READ: '+err.message);
+         res.end('');
       }
    });
 	app.get('/next', function(req,res){
@@ -64,37 +66,33 @@ mc.connect(url, {useUnifiedTopology:true},function(err, db){
 		var n=req.query.v;
 		var id = ObjectId(q);
 		var ckey = dbn.collection("key");
-		ckey.find({"_id":id}).each(function(err, t){
-			try {
-				console.log(t);
-				ckey.updateOne({"_id":id},{$set:{"visit":t.visit+parseInt(n)}});
-			} catch(err) {
-				console.log('nextERR: '+err.message);
-			}
-		});
-	});
+      try {
+         ckey.updateOne({"_id":id},{$inc:{"visit":parseInt(n)}});
+         console.log(q+'='+n);
+      } catch(err) {
+         console.log('nextERR: '+err.message);
+      }
+      finally{
+         res.end('');
+      }
+   });
 	app.get('/ex', function(req, res){
 		var q=req.query.q;
-		if(q == undefined){
-			res.end('')
-		}
 		try{
-			db.db("test").collection("txt")
-			.find({"key":q}).sort({"visit":1}).limit(1)
-			.each(function(err,t){
-				if(err) throw err;
-				try{
-					db.db("test").collection("txt")
-					.updateOne({"_id":ObjectId(t._id)},{$set:{'visit':t.visit+1}});
-					res.end(JSON.stringify(t));
-				} catch(err){
-					console.log('ERR:'+err.message);
-				}
-			});
-		}
-		catch(err){
-			console.log('ERR: '+err.message);
-		}
+         dbn.collection('txt').findOneAndUpdate(
+         {'key':q},
+         {$inc:{'visit':1}},
+         {sort:{'visit':1}},
+         function(err,t){
+            if(t)
+               res.end(JSON.stringify(t.value));
+            else
+               res.end("{'key':'null','se_lis':'error'}");
+         });
+      } catch(err){
+         console.log('ERR:'+err.message);
+         res.end("{'key':'null','se_lis':'"+err.message+"'}");
+      }
 	});
 });
 var server = app.listen(8081, function(){
