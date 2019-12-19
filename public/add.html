@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv='charset' content='utf-8'>
+<title>exercise</title>
+<script src="jquery-3.4.1.js" type='application/javascript'></script>
+<script>
+function submit(){
+   $.get('/upload',{'dt':$("#word").val()},(r)=>{
+      $("#txt").html(r);
+   });
+}
+</script>
+</head>
+<body>
+<input id='word'/>
+<input id='submit' type='button' value='submit' onclick='submit();'/>
+<div id='txt'></div>
+</body>
+</html>

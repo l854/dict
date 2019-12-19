@@ -1,4 +1,5 @@
 var express = require('express');
+var http=require('http')
 var path = require('path')
 var app = express();
 var mc = require('mongodb').MongoClient;
@@ -8,6 +9,49 @@ app.use(express.static(path.join(__dirname,'public')))
 mc.connect(url, {useUnifiedTopology:true},function(err, db){
 	if (err) throw err;
 	var dbn=db.db("test");
+   app.get('/upload', function(req, res){
+      var d=req.query.dt;
+      var ckey=dbn.collection("key");
+      var ctxt=dbn.collection("txt");
+      ckey.find({'key':d}).count().then(c=>{
+         if(c>0){
+            ckey.findOne({'key':d},(er,r)=>{
+               try{
+                  res.send(r.se_lis);
+               } catch(err){
+                  res.send(err.message);
+               }
+            });
+         } else {
+            http.get('http://cn.bing.com/dict/search?q='+d,(r)=>{
+               var h=''
+               r.on('data',(d)=>{h+=d;});
+               r.on('end',()=>{
+                  try{
+                     x=/<script.*?>(.*?)<\/script>/g
+                     x1=/<div class="sen_en">(.*?)<\/div>/g
+                     x2=/<div class="sen_cn">(.*?)<\/div>/g
+                     ky=/<div class="li_sen" id="newLeId">(.*?)<\/div><\/div><div id="crossid"/
+                     se=ky.exec(h);
+                     ckey.insertOne({'key':d,
+                     'se_lis':'<div class="li_sen" id="newLeId">'+se+'</div>',
+                     'visit':0});
+                     var c1,c2;
+                     while((c1=x1.exec(h)) && (c2=x2.exec(h))){
+                        en=c1[1].replace(/<.*?>/g,'');
+                        zh=c2[1].replace(/<.*?>/g,'');
+                        ctxt.insertOne({'key':d,'en':en,'zh':zh,'visit':0});
+                     }
+                     res.send(se);
+                  } catch(err){
+                     console.log('UPLOAD ERR: '+err.message);
+                     res.send(err.message);
+                  }
+               });
+            });
+         }
+      });
+   });
 	app.get('/pick', function(req, res){
 		dbn.collection("key")
 		.find().sort({"visit":1}).limit(1)
